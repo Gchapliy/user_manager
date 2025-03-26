@@ -30,6 +30,10 @@ export async function seedDatabase() {
         `)
 }
 
+export async function deleteAllUsers() {
+  await executeQuery(`DELETE FROM users;`)
+}
+
 export async function getUsers(): Promise<User[]> {
   const connection = await dbConnect()
   const [rows] = await connection.execute<mysql.RowDataPacket[]>(

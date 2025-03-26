@@ -49,3 +49,30 @@ export function UploadXLSX({ setUsers }: { setUsers: (users: any) => void }) {
     </label>
   )
 }
+
+export function Button({
+  name,
+  action,
+  message,
+  setUsers,
+}: {
+  name: string
+  action: () => void
+  message: string
+  setUsers: () => void
+}) {
+  const handleOnClick = async function () {
+    await action()
+    setUsers()
+    toast.success(message)
+  }
+
+  return (
+    <button
+      onClick={handleOnClick}
+      className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700"
+    >
+      {name}
+    </button>
+  )
+}

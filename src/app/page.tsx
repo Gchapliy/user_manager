@@ -1,20 +1,24 @@
 'use client'
-import { UploadXLSX } from './ui/buttons'
+import { Button, UploadXLSX } from './ui/buttons'
 import { Toaster } from 'react-hot-toast'
-import { Suspense, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { User } from '@/app/lib/defenitions'
-import { fetchUsers } from './lib/actions'
+import { fetchUsers, removeAllUsers, createNewUser } from './lib/actions'
 import Table from './ui/table'
 import { TableSkeleton } from './ui/skeletons'
 
 export default function Home() {
   const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setLoading] = useState(false)
+  const [isLoaded, setLoaded] = useState(false)
 
   useEffect(() => {
     async function loadusers() {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      setLoading(true)
       const response = await fetchUsers()
       setUsers(response)
+      setLoading(false)
+      setLoaded(true)
     }
 
     loadusers()
@@ -26,12 +30,29 @@ export default function Home() {
         <Toaster position="top-center" />
       </div>
       <div className="flex justify-end gap-2 items-center mb-4">
-        <button className="bg-black text-white px-4 py-2 rounded-md">
-          Create New
-        </button>
+        <Button
+          name="Create New"
+          action={createNewUser}
+          message="New user has been created"
+          setUsers={() => {
+            setUsers([])
+          }}
+        />
+        <Button
+          name="Delete All"
+          action={removeAllUsers}
+          message="All users has been deleted"
+          setUsers={() => {
+            setUsers([])
+          }}
+        />
         <UploadXLSX setUsers={setUsers} />
       </div>
-      <Table users={users} />
+      {isLoading ? (
+        <TableSkeleton />
+      ) : (
+        <Table users={users} isLoaded={isLoaded} />
+      )}
     </div>
   )
 }
