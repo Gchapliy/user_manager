@@ -1,14 +1,51 @@
 'use server'
-import { User } from '@/app/lib/defenitions'
-import { insertUsers, getUsers, deleteAllUsers } from './db'
+import { DBResult, User } from '@/app/lib/defenitions'
+import {
+  insertUsers,
+  getUsers,
+  deleteAllUsers,
+  insertUser,
+  deleteUserById,
+  retrieveUserById,
+} from './db'
+import { z } from 'zod'
 
-export async function populateUsers(users: User[]) {
-  try {
-    await insertUsers(users)
-  } catch (error) {
-    console.error(error)
-    throw error
+const userSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+})
+
+export async function validateUser({
+  name,
+  email,
+}: {
+  name: string
+  email: string
+}) {
+  const validatedFields = userSchema.safeParse({
+    name: name,
+    email: email,
+  })
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Invoice.',
+    }
   }
+
+  return {}
+}
+export async function getUserById(userId: number): Promise<DBResult> {
+  return await retrieveUserById(userId)
+}
+
+export async function createUser(user: User): Promise<DBResult> {
+  return await insertUser(user)
+}
+
+export async function populateUsers(users: User[]): Promise<DBResult> {
+  return await insertUsers(users)
 }
 
 export async function fetchUsers(): Promise<User[]> {
@@ -19,6 +56,6 @@ export async function removeAllUsers() {
   await deleteAllUsers()
 }
 
-export async function createNewUser() {
-  console.log('FUNCTION CREATE NEW USER CALLED!!!')
+export async function removeUserById(userId: number): Promise<DBResult> {
+  return await deleteUserById(userId)
 }
