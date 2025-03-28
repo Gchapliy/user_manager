@@ -1,6 +1,6 @@
 import mysql, { Connection } from 'mysql2/promise'
 import { DBResult, User } from './defenitions'
-import { formatDateForMySQL } from './utils'
+import { formatDateForMySQL, formatDate } from './utils'
 
 export async function dbConnect(): Promise<Connection> {
   const connection = await mysql.createConnection({
@@ -9,6 +9,7 @@ export async function dbConnect(): Promise<Connection> {
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE_NAME,
     port: Number(process.env.DATABASE_PORT),
+    timezone: 'Z',
   })
   return connection
 }
@@ -40,7 +41,6 @@ export async function getUsers(): Promise<User[]> {
   const [rows] = await connection.execute<mysql.RowDataPacket[]>(
     'SELECT id, name, email, createdAt FROM users'
   )
-  console.log(rows)
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -105,11 +105,35 @@ export async function insertUser(user: User): Promise<DBResult> {
   }
 }
 
+export async function updateUser(user: User): Promise<DBResult> {
+  const userInDB = await checkUserByParameter(user.id, 'id')
+
+  if (!userInDB) {
+    return {
+      message: 'User is not existed',
+      isSuccess: false,
+    }
+  }
+
+  const sql = `UPDATE users SET name = ?, email = ?, createdAt = ? WHERE id = ?`
+
+  await executeQuery(sql, [
+    user.name,
+    user.email,
+    formatDateForMySQL(user.createdAt),
+    user.id,
+  ])
+
+  return {
+    message: 'User successfully updated',
+    isSuccess: true,
+  }
+}
+
 export async function deleteUserById(userId: number): Promise<DBResult> {
   const parameterName = 'id'
   const isExisted = await checkUserByParameter(userId, parameterName)
 
-  console.log('userID: ', userId)
   if (!isExisted) {
     return { message: 'User is not existed', isSuccess: false }
   }

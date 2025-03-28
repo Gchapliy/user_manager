@@ -1,13 +1,14 @@
 'use client'
-import { User } from '@/app/lib/defenitions'
+import { User, DBResult } from '@/app/lib/defenitions'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 import DeleteUserModal from './deleteModal'
 import { useState } from 'react'
 import { formatDate } from '../lib/utils'
 import { removeUserById } from '../lib/actions'
-import { DBResult } from '@/app/lib/defenitions'
 import toast from 'react-hot-toast'
 import { processDBResult } from '../lib/actionsClient'
+import { IconButton } from './buttons'
+import UserModal from './userModal'
 
 interface TableProps {
   users: User[]
@@ -21,26 +22,32 @@ export default function Table({
   loadUsersAction,
 }: TableProps) {
   const [isModalDeleteOpen, setIsModalDeleteOpen] = useState(false)
-  const [userId, setUserId] = useState(0)
+  const [isModalEditOpen, setIsModalEditOpen] = useState(false)
+  const [userState, setUserState] = useState<User>({
+    id: 0,
+    name: '',
+    email: '',
+    createdAt: new Date(),
+  })
 
   const handleDeleteUser = async () => {
     try {
-      const result: DBResult = await removeUserById(userId)
-      setIsModalDeleteOpen(false)
-      processDBResult(result)
+      if (userState.id) {
+        const result: DBResult = await removeUserById(userState.id)
+        setIsModalDeleteOpen(false)
+        processDBResult(result)
+      } else {
+        toast.error('Some problem with user')
+      }
     } catch (error) {
       console.log(error)
       toast.error(`Unfortunatelly some error has happened. Try again`)
     }
   }
 
-  const handleDeleteModal = async (userId?: number) => {
-    if (userId) {
-      setIsModalDeleteOpen(true)
-      setUserId(userId)
-    } else {
-      toast.error('Some problem with user')
-    }
+  const handleModal = async (user: User, action: () => void) => {
+    setUserState(user)
+    action()
   }
 
   return (
@@ -61,15 +68,18 @@ export default function Table({
               <td className="p-3 text-black">{user.email}</td>
               <td className="p-3 text-black">{formatDate(user.createdAt)}</td>
               <td className="p-3 text-black flex gap-2">
-                <button className="border p-2 rounded-md hover:bg-gray-300">
-                  <PencilSquareIcon className="w-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteModal(user.id)}
-                  className="border p-2 rounded-md hover:bg-gray-300"
-                >
-                  <TrashIcon className="w-4" />
-                </button>
+                <IconButton
+                  icon={<PencilSquareIcon className="w-4" />}
+                  action={() =>
+                    handleModal(user, () => setIsModalEditOpen(true))
+                  }
+                />
+                <IconButton
+                  icon={<TrashIcon className="w-4" />}
+                  action={() =>
+                    handleModal(user, () => setIsModalDeleteOpen(true))
+                  }
+                />
               </td>
             </tr>
           ))}
@@ -85,6 +95,12 @@ export default function Table({
         onClose={() => setIsModalDeleteOpen(false)}
         action={handleDeleteUser}
         loadUsersAction={loadUsersAction}
+      />
+      <UserModal
+        isOpen={isModalEditOpen}
+        onClose={() => setIsModalEditOpen(false)}
+        loadUsersAction={loadUsersAction}
+        user={userState}
       />
     </div>
   )

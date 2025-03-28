@@ -7,6 +7,7 @@ import {
   insertUser,
   deleteUserById,
   retrieveUserById,
+  updateUser,
 } from './db'
 import { z } from 'zod'
 
@@ -30,7 +31,7 @@ export async function validateUser({
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Create Invoice.',
+      message: 'Missing Fields. Failed to Create User.',
     }
   }
 
@@ -42,6 +43,10 @@ export async function getUserById(userId: number): Promise<DBResult> {
 
 export async function createUser(user: User): Promise<DBResult> {
   return await insertUser(user)
+}
+
+export async function updateUserData(user: User): Promise<DBResult> {
+  return await updateUser(user)
 }
 
 export async function populateUsers(users: User[]): Promise<DBResult> {

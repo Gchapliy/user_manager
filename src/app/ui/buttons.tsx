@@ -65,3 +65,20 @@ export function Button({ name, action }: { name: string; action: () => void }) {
     </button>
   )
 }
+
+export function IconButton({
+  icon,
+  action,
+}: {
+  icon: React.ReactNode
+  action: () => void
+}) {
+  return (
+    <button
+      onClick={action}
+      className="border p-2 rounded-md hover:bg-gray-300"
+    >
+      {icon}
+    </button>
+  )
+}
